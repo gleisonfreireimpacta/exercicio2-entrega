@@ -1,0 +1,69 @@
+name: Go Example
+
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: "*/15 * * * 1-6"
+
+env:
+  FILE_NAME: hello-server
+
+jobs:
+  build-go:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4  # Atualize para v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5  # Atualize para v5
+
+      - name: Build for Linux
+        run: go build ${{ env.FILE_NAME }}.go
+
+      - name: Build for Windows
+        run: GOOS=windows GOARCH=amd64 go build ${{ env.FILE_NAME }}.go
+
+      - name: Upload artifact for linux
+        uses: actions/upload-artifact@v4  # Atualize para v4
+        with:
+          name: linux
+          path: ./${{ env.FILE_NAME }}
+
+      - name: Upload artifact for windows
+        uses: actions/upload-artifact@v4  # Atualize para v4
+        with:
+          name: windows
+          path: ./${{ env.FILE_NAME }}.exe
+
+  download-and-run-linux:
+    needs: build-go
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4  # Atualize para v4
+
+      - name: Download linux artifact
+        uses: actions/download-artifact@v4  # Atualize para v4
+        with:
+          name: linux
+
+      - name: Give execute permissions for run.sh
+        run: chmod +x run.sh
+
+      - name: Run the script
+        run: ./run.sh  # Corrija para executar o script diretamente
+
+  download-only-windows:
+    needs: build-go
+    runs-on: windows-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4  # Atualize para v4
+
+      - name: Download windows artifact
+        uses: actions/download-artifact@v4  # Atualize para v4
+        with:
+          name: windows
